@@ -12,7 +12,7 @@
 **NanoUro-LLM** 是一个专为**泌尿科 (Urology)** 临床场景设计的轻量级大语言模型微调框架。
 基于 [Unsloth](https://github.com/unslothai/unsloth) 加速引擎与 [RJUA-QADatasets](http://data.openkg.cn/dataset/rjua-qadatasets)，致力于将 DeepSeek-R1、Gemma 3 等通用模型转化为具备一定泌尿临床知识的专科 AI 助手。
 
-[English](README-en.md) • [中文](README-zh.md) • [项目特点](#-核心特性) • [安装部署](#-环境与安装) • [微调指南](#-微调工作流) • [演示案例](#-推理演示) • [免责声明](#-局限性与免责声明)
+[English](README-en.md) • [中文](README-zh.md) • [项目特点](#-核心特性) • [安装部署](#-环境与安装) • [微调指南](#-微调工作流) • [演示案例](#-推理演示) • [免责声明](#-局限性)
 
 </div>
 
