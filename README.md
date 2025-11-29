@@ -1,4 +1,3 @@
-
 <div align="center">
 
 # 🧬 NanoUro-LLM
@@ -12,7 +11,7 @@
 **NanoUro-LLM** 是一个专为**泌尿科 (Urology)** 临床场景设计的轻量级大语言模型微调框架。
 基于 [Unsloth](https://github.com/unslothai/unsloth) 加速引擎与 [RJUA-QADatasets](http://data.openkg.cn/dataset/rjua-qadatasets)，致力于将 DeepSeek-R1、Gemma 3 等通用模型转化为具备一定泌尿临床知识的专科 AI 助手。
 
-[English](README-en.md) • [中文](README-zh.md) • [项目特点](#-核心特性) • [安装部署](#-环境与安装) • [微调指南](#-微调工作流) • [演示案例](#-推理演示) • [免责声明](#-局限性)
+[English](README-en.md) • [中文](README-zh.md) • [项目特点](#-核心特性) • [安装部署](#️-环境与安装) • [微调指南](#-微调工作流) • [演示案例](#-推理演示) • [免责声明](#️-局限性与免责声明)
 
 </div>
 
@@ -62,11 +61,12 @@ NanoUro-LLM 针对**仁济医院泌尿科问答数据集**构建了一套完整�
 
 ### 1. 克隆项目
 ```bash
-git clone https://github.com/yufan-pu/NanoUro-LLM.git
+git clone [https://github.com/yufan-pu/NanoUro-LLM.git](https://github.com/yufan-pu/NanoUro-LLM.git)
 cd NanoUro-LLM
-```
+````
 
-### 2. 环境配置 (推荐 Mamba/Conda)
+### 2\. 环境配置 (推荐 Mamba/Conda)
+
 Anaconda 在处理部分依赖时可能较慢，推荐使用 Mamba。
 
 ```bash
@@ -78,7 +78,8 @@ mamba activate nanouroLLM
 python -m ipykernel install --user --name nanouroLLM --display-name "Python 3.12 (nanouroLLM)"
 ```
 
-### 3. 安装 PyTorch 
+### 3\. 安装 PyTorch
+
 请根据你的 CUDA 版本安装：
 
 ```bash
@@ -86,25 +87,31 @@ python -m ipykernel install --user --name nanouroLLM --display-name "Python 3.12
 # 确定GPU和cuda支持版本，CUDA Version: 12.8 → 对应安装cu128版本Torch
 nvidia-smi 
 # 安装torch,参考官方示例
-https://pytorch.org/get-started/previous-versions/ 
+[https://pytorch.org/get-started/previous-versions/](https://pytorch.org/get-started/previous-versions/) 
 # 例：安装torch 2.9.0+cu128
-pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 --index-url https://download.pytorch.org/whl/cu128
+pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 --index-url [https://download.pytorch.org/whl/cu128](https://download.pytorch.org/whl/cu128)
 ```
-###  4.安装 Unsloth 及其他依赖
-* 在IDE打开项目文件`NanoUrollm.ipynb`  
-  然后运行`install required libraries`安装
 
----
+### 4.安装 Unsloth 及其他依赖
+
+  * 在IDE打开项目文件`NanoUrollm.ipynb`  
+    然后运行`install required libraries`安装
+
+-----
 
 ## 🚀 微调工作流
-* 打开`NanoUrollm.ipynb`运行，项目通过 `Data curation`,`MedicalFineTuningFramework` 类封装了数据清洗及LoRA微调等流程。
+
+  * 打开`NanoUrollm.ipynb`运行，项目通过 `Data curation`,`MedicalFineTuningFramework` 类封装了数据清洗及LoRA微调等流程。
 
 ### 第一步：数据清洗
+
 RJUA的原始JSON数据包含学术引用和格式噪声，运行`Data curation`模块
-* 输入`RJUA_train.json`
-* 输出`RJUA_train_cleaned.json`文件
+
+  * 输入`RJUA_train.json`
+  * 输出`RJUA_train_cleaned.json`文件
 
 ### 第二步：启动微调
+
 配置 LoRA 参数一键运行开始训练，框架自动处理分词器和对话模板对齐。
 
 ```python
@@ -129,67 +136,65 @@ stats = framework.train(
 ```
 
 ### 第三步：加载与推理
+
 使用微调好的 LoRA adapter 进行推理，建议使用绝对路径,
 
 ```python
-from inference import ModelLoader
-
-# 模型路径配置
+# Configure model paths 配置模型路径
 BASE_MODEL_DIR = "./model_cache/unsloth/DeepSeek-R1-Distill-Llama-8B"
 LORA_OUTPUT_DIR = "./outputs/deepseek-8b_lora"
 
+# Create DeepSeek specific configuration 创建DeepSeek专用配置
+config = ModelConfig.create_deepseek_config()
 
-# 创建自定义推理配置
-custom_config = InferenceConfig(
-    temperature=0.6,
-    top_p=0.95,
-    top_k=64,
-    repetition_penalty=1.15,
-    max_new_tokens=2048,
-    enable_thinking=True
-)
+# Initialize loader 初始化加载器
+loader = UnifiedModelLoader(config)
 
-# 系统提示词
-system_instruction = "你是一个泌尿科医学专家，请根据患者描述和医学知识，详细推理后给出专业诊断和治疗建议。"
-# 用户提示词
-user_input = "75岁男性，最近尿频尿急，请问可能是什么原因？"
-
-response = loader.chat(
-    user_input, 
-    system_prompt=system_instruction,
-    temperature=0.6,
-    max_new_tokens=2048,
-    enable_thinking=True
-)
-
-print(response)
+try:
+    # Load model 加载模型
+    loader.load_local_lora(BASE_MODEL_DIR, LORA_OUTPUT_DIR)
+    
+    # System prompt 系统提示词
+    system_prompt = "你是一个泌尿科医学专家，请根据患者描述和医学知识，详细推理后给出专业诊断和治疗建议。"
+    
+    # Test inference 测试推理
+    user_input = "医生您好，我父亲70岁，平时晚上上厕所次数有点多，大概3-4次，白天也比较频繁，平时一直口服多沙唑嗪、非那雄胺，因为3年前装了心脏支架，一直长期口服阿司匹林、波立维，这次因为小便有血已经2天了就去了医院看病，做了检查膀胱血块7*7cm，血指标：白细胞：5.21，血红蛋白：151，血肌酐：71，PT：11.3，INR：0.96，请问我父亲这是什么情况？应该怎么处理？"
+    
+    print("🧪 Testing DeepSeek inference (with thinking chain enabled): 测试DeepSeek推理（启用思维链）:")
+    response = loader.chat(
+        user_input,
+        system_prompt=system_prompt,
+        enable_thinking=True,
+        max_new_tokens=4096
+    )
+    print(f"🤖 NanoUro-LLM: {response}")
 ```
 
----
+-----
 
 ## 📝 推理演示
 
 *来自基于此数据集微调的DeepSeek-8B模型的实际输出：*
 
 > **用户（患者）：**
-> "你好，我最近发热腰痛不适，应该怎么办？"
+> "医生您好，我父亲70岁，平时晚上上厕所次数有点多，大概3-4次，白天也比较频繁，平时一直口服多沙唑嗪、非那雄胺，因为3年前装了心脏支架，一直长期口服阿司匹林、波立维，这次因为小便有血已经2天了就去了医院看病，做了检查膀胱血块7*7cm，血指标：白细胞：5.21，血红蛋白：151，血肌酐：71，PT：11.3，INR：0.96，请问我父亲这是什么情况？应该怎么处理？"
 
-> **NanoUro-LLM：**
-> **（思维过程）**
-> *...患者主诉尿频尿急一周...CT显示双侧肾结石，右肾下极结石...输尿管结石...*
-> *分析：症状提示尿路感染合并结石引起的梗阻。*
+> **NanoUro-LLM：**  
+> **（思维过程）** *首先，考虑到您的父亲年龄较大且存在心脏疾病史（冠状动脉旁路手术），这将影响他的整体健康状况。出现小便带血可能提示膀胱或尿道感染，或更严重的问题如肾癌、急性肾盂腔炎或其他泌尿系统疾病。结合膀胱血块大小为7×7 cm，白细胞略升（5.21），血肌酐稍高（71），以及正常的凝血功能（PT: 11.3, INR: 0.96），初步判断可能的原因包括：...综上所述，您父亲的情况需要综合考虑膀胱病变、肾脏功能、心脏病历史和自身代谢状况的多方面因素，通过精准的实验室检验、影像学评估和临床试验来明确病因诊断，进而制定合适的治疗方案...*
 >
 > **（回答）**
-> 根据您的症状和检查结果，您的诊断为**泌尿道炎症**（尿道口酸痛、尿频尿急）合并**双侧输尿管结石**。
+> **临床结论与治疗决策：**
+>鉴于您的父亲70岁且有心脏病史，面临小便带血情况下的临床困境，需综合考虑膀胱感染、肾盂腔炎、肾结石等多种可能性。建议进行必要的影像学和实验室检查以明确病因，并依据具体诊断结果采取相应的治疗措施。同时，需密切关注心肾功能变化，以确保治疗过程中的安全性和有效性。
 >
-> **治疗建议：**
->
-> 1.  **抗感染**：泌尿道炎症需要抗生素治疗。
-> 2.  **手术介入**：泌尿系结石伴有积水/梗阻，建议进行手术治疗（如输尿管镜碎石术）。
-> 3.  **对症治疗**：针对肝小囊肿建议后续随访或微波消融。
----
+> **最终建议：**
+> 1. **进行尿液培养和膀胱核酸检测**：判断是否有膀胱细菌感染，指导治疗。
+> 2. **进行腹部超声或CT扫描**：评估膀胱和肾盂的形态结构，排除肾盂结石等隐患。
+> 3. **定期监测肾功能和血液指标**：确保治疗不会损害肾脏功能和心脏健康。
+> 4. **根据诊断调整治疗方案**：如果病情稳定，可以在控制心脏病的前提下恢复正常生活方式。
 
-## ⚠️ 局限性
+-----
+
+## ⚠️ 局限性与免责声明
 
 本框架及模型仅供**医学 AI 研究与技术验证**使用。
 
@@ -201,16 +206,15 @@ print(response)
 | **🤖 小模型的固有缺陷** | 轻量级模型（如 `qwen3-0.6b` 和 `gemma3-270m`）**表达能力有限**。更可能出现逻辑混乱、事实错误、前后矛盾或“胡言乱语”的情况，**在医学领域的实用性低，仅建议用于技术演示或非关键场景的探索**。 |
 | **⚖️ 泛化能力与偏见** | 模型的性能严重依赖于其训练数据。如果训练数据存在分布偏差（例如，某些人群或疾病的数据不足），模型在相应领域的表现会下降，甚至可能放大数据中存在的社会偏见或医学实践差异。 |
 
----
+-----
 
 ## 📜 许可证
 
-* **代码**：Apache 2.0 License
-* **数据集**：遵循 RJUA / OpenKG 原始协议
-* **模型权重**：遵循基础模型（DeepSeek/Google/Qwen）的使用协议
+  * **代码**：Apache 2.0 License
+  * **数据集**：遵循 RJUA / OpenKG 原始协议
+  * **模型权重**：遵循基础模型（DeepSeek/Google/Qwen）的使用协议
 
 <div align="center">
 <br/>
 <sub>Made with 奶牛猫 | Powered by <a href="https://github.com/unslothai/unsloth">Unsloth</a> 和医学热情</sub></sub>
 </div>
-
