@@ -11,7 +11,7 @@
 **NanoUro-LLM** 是一个专为**泌尿科 (Urology)** 临床场景设计的轻量级大语言模型微调框架。
 基于 [Unsloth](https://github.com/unslothai/unsloth) 加速引擎与 [RJUA-QADatasets](http://data.openkg.cn/dataset/rjua-qadatasets)，致力于将 DeepSeek-R1、Gemma 3 等通用模型转化为具备一定泌尿临床知识的专科 AI 助手。
 
-[English](README-en.md) • [中文](README-zh.md) • [项目特点](#-核心特性) • [安装部署](#-安装部署) • [微调指南](#-微调工作流) • [演示案例](#-推理演示) • [局限性](#-局限性)
+[English](README-en.md) • [中文](README-zh.md) • [项目特点](#-核心特性) • [安装部署](#️-环境与安装) • [微调指南](#-微调工作流) • [演示案例](#-推理演示) • [免责声明](#-局限性与免责声明)
 
 </div>
 
@@ -55,17 +55,18 @@ NanoUro-LLM 针对**仁济医院泌尿科问答数据集**构建了一套完整�
 
 ---
 
-## 🛠️ 安装部署
+## 🛠️ 环境与安装
 
 推荐使用 NVIDIA GPU 环境（显存 ≥ 16GB 推荐，支持 A100/4090D）。
 
 ### 1. 克隆项目
 ```bash
-git clone https://github.com/yufan-pu/NanoUro-LLM.git
+git clone [https://github.com/yufan-pu/NanoUro-LLM.git](https://github.com/yufan-pu/NanoUro-LLM.git)
 cd NanoUro-LLM
-```
+````
 
-### 2. 环境配置 (推荐 Mamba/Conda)
+### 2\. 环境配置 (推荐 Mamba/Conda)
+
 Anaconda 在处理部分依赖时可能较慢，推荐使用 Mamba。
 
 ```bash
@@ -77,7 +78,8 @@ mamba activate nanouroLLM
 python -m ipykernel install --user --name nanouroLLM --display-name "Python 3.12 (nanouroLLM)"
 ```
 
-### 3. 安装 PyTorch 
+### 3\. 安装 PyTorch
+
 请根据你的 CUDA 版本安装：
 
 ```bash
@@ -85,25 +87,31 @@ python -m ipykernel install --user --name nanouroLLM --display-name "Python 3.12
 # 确定GPU和cuda支持版本，CUDA Version: 12.8 → 对应安装cu128版本Torch
 nvidia-smi 
 # 安装torch,参考官方示例
-https://pytorch.org/get-started/previous-versions/ 
+[https://pytorch.org/get-started/previous-versions/](https://pytorch.org/get-started/previous-versions/) 
 # 例：安装torch 2.9.0+cu128
-pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 --index-url https://download.pytorch.org/whl/cu128
+pip install torch==2.9.0 torchvision==0.24.0 torchaudio==2.9.0 --index-url [https://download.pytorch.org/whl/cu128](https://download.pytorch.org/whl/cu128)
 ```
-###  4.安装 Unsloth 及其他依赖
-* 在IDE打开项目文件`NanoUrollm.ipynb`  
-  然后运行`install required libraries`安装
 
----
+### 4.安装 Unsloth 及其他依赖
+
+  * 在IDE打开项目文件`NanoUrollm.ipynb`  
+    然后运行`install required libraries`安装
+
+-----
 
 ## 🚀 微调工作流
-* 打开`NanoUrollm.ipynb`运行，项目通过 `Data curation`,`MedicalFineTuningFramework` 类封装了数据清洗及LoRA微调等流程。
+
+  * 打开`NanoUrollm.ipynb`运行，项目通过 `Data curation`,`MedicalFineTuningFramework` 类封装了数据清洗及LoRA微调等流程。
 
 ### 第一步：数据清洗
+
 RJUA的原始JSON数据包含学术引用和格式噪声，运行`Data curation`模块
-* 输入`RJUA_train.json`
-* 输出`RJUA_train_cleaned.json`文件
+
+  * 输入`RJUA_train.json`
+  * 输出`RJUA_train_cleaned.json`文件
 
 ### 第二步：启动微调
+
 配置 LoRA 参数一键运行开始训练，框架自动处理分词器和对话模板对齐。
 
 ```python
@@ -128,6 +136,7 @@ stats = framework.train(
 ```
 
 ### 第三步：加载与推理
+
 使用微调好的 LoRA adapter 进行推理，建议使用绝对路径,
 
 ```python
@@ -164,7 +173,7 @@ response = loader.chat(
 print(response)
 ```
 
----
+-----
 
 ## 📝 推理演示
 
@@ -186,27 +195,28 @@ print(response)
 > 1.  **抗感染**：泌尿道炎症需要抗生素治疗。
 > 2.  **手术介入**：泌尿系结石伴有积水/梗阻，建议进行手术治疗（如输尿管镜碎石术）。
 > 3.  **对症治疗**：针对肝小囊肿建议后续随访或微波消融。
----
 
-## ⚠️ 局限性
+-----
+
+## ⚠️ 局限性与免责声明
 
 本框架及模型仅供**医学 AI 研究与技术验证**使用。
 
 | 局限性 | 说明 |
 | :--- | :--- |
-| **🧠 模型幻觉** | 大型语言模型本质上是一种概率生成模型，**可能生成看似合理但事实上不准确、不完整或完全错误（即"幻觉"）的医学信息**。这包括但不限于：编造不存在的症状、推荐错误的治疗方案、误诊病情等。**不可将其输出视为最终的医学诊断或治疗依据。** |
+| **🧠 模型幻觉** | 大型语言模型本质上是一种概率生成模型，**可能生成看似合理但事实上不准确、不完整或完全错误（即“幻觉”）的医学信息**。这包括但不限于：编造不存在的症状、推荐错误的治疗方案、误诊病情等。**不可将其输出视为最终的医学诊断或治疗依据。** |
 | **📊 未经系统性临床评估** | 模型**尚未经过严格的、大规模的临床前瞻性试验或由权威医学专家委员会的全面评估**。其有效性和安全性仍未得到充分验证。模型表现基于有限的测试数据，在真实世界的复杂医疗环境中可能表现不佳。 |
 | **🔬 知识截止与覆盖范围** | 模型的训练数据存在知识截止日期，**无法涵盖最新的医学研究、临床指南、药品信息或疾病发现**。同时，其知识库可能无法覆盖所有罕见病、复杂病症或特定人群的医学情况。 |
-| **🤖 小模型的固有缺陷** | 轻量级模型（如 `qwen3-0.6b` 和 `gemma3-270m`）**表达能力有限**。更可能出现逻辑混乱、事实错误、前后矛盾或"胡言乱语"的情况，**在医学领域的实用性低，仅建议用于技术演示或非关键场景的探索**。 |
+| **🤖 小模型的固有缺陷** | 轻量级模型（如 `qwen3-0.6b` 和 `gemma3-270m`）**表达能力有限**。更可能出现逻辑混乱、事实错误、前后矛盾或“胡言乱语”的情况，**在医学领域的实用性低，仅建议用于技术演示或非关键场景的探索**。 |
 | **⚖️ 泛化能力与偏见** | 模型的性能严重依赖于其训练数据。如果训练数据存在分布偏差（例如，某些人群或疾病的数据不足），模型在相应领域的表现会下降，甚至可能放大数据中存在的社会偏见或医学实践差异。 |
 
----
+-----
 
 ## 📜 许可证
 
-* **代码**：Apache 2.0 License
-* **数据集**：遵循 RJUA / OpenKG 原始协议
-* **模型权重**：遵循基础模型（DeepSeek/Google/Qwen）的使用协议
+  * **代码**：Apache 2.0 License
+  * **数据集**：遵循 RJUA / OpenKG 原始协议
+  * **模型权重**：遵循基础模型（DeepSeek/Google/Qwen）的使用协议
 
 <div align="center">
 <br/>
