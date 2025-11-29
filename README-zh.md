@@ -11,7 +11,7 @@
 **NanoUro-LLM** 是一个专为**泌尿科 (Urology)** 临床场景设计的轻量级大语言模型微调框架。
 基于 [Unsloth](https://github.com/unslothai/unsloth) 加速引擎与 [RJUA-QADatasets](http://data.openkg.cn/dataset/rjua-qadatasets)，致力于将 DeepSeek-R1、Gemma 3 等通用模型转化为具备一定泌尿临床知识的专科 AI 助手。
 
-[English](README-en.md) • [中文](README-zh.md) • [项目特点](#-核心特性) • [安装部署](#️-环境与安装) • [微调指南](#-微调工作流) • [演示案例](#-推理演示) • [免责声明](#-局限性与免责声明)
+[English](README-en.md) • [中文](README-zh.md) • [项目特点](#-核心特性) • [安装部署](#️-环境与安装) • [微调指南](#-微调工作流) • [演示案例](#-推理演示) • [免责声明](#️-局限性与免责声明)
 
 </div>
 
@@ -140,37 +140,34 @@ stats = framework.train(
 使用微调好的 LoRA adapter 进行推理，建议使用绝对路径,
 
 ```python
-from inference import ModelLoader
-
-# 模型路径配置
+# Configure model paths 配置模型路径
 BASE_MODEL_DIR = "./model_cache/unsloth/DeepSeek-R1-Distill-Llama-8B"
 LORA_OUTPUT_DIR = "./outputs/deepseek-8b_lora"
 
+# Create DeepSeek specific configuration 创建DeepSeek专用配置
+config = ModelConfig.create_deepseek_config()
 
-# 创建自定义推理配置
-custom_config = InferenceConfig(
-    temperature=0.6,
-    top_p=0.95,
-    top_k=64,
-    repetition_penalty=1.15,
-    max_new_tokens=2048,
-    enable_thinking=True
-)
+# Initialize loader 初始化加载器
+loader = UnifiedModelLoader(config)
 
-# 系统提示词
-system_instruction = "你是一个泌尿科医学专家，请根据患者描述和医学知识，详细推理后给出专业诊断和治疗建议。"
-# 用户提示词
-user_input = "75岁男性，最近尿频尿急，请问可能是什么原因？"
-
-response = loader.chat(
-    user_input, 
-    system_prompt=system_instruction,
-    temperature=0.6,
-    max_new_tokens=2048,
-    enable_thinking=True
-)
-
-print(response)
+try:
+    # Load model 加载模型
+    loader.load_local_lora(BASE_MODEL_DIR, LORA_OUTPUT_DIR)
+    
+    # System prompt 系统提示词
+    system_prompt = "你是一个泌尿科医学专家，请根据患者描述和医学知识，详细推理后给出专业诊断和治疗建议。"
+    
+    # Test inference 测试推理
+    user_input = "医生您好，我父亲70岁，平时晚上上厕所次数有点多，大概3-4次，白天也比较频繁，平时一直口服多沙唑嗪、非那雄胺，因为3年前装了心脏支架，一直长期口服阿司匹林、波立维，这次因为小便有血已经2天了就去了医院看病，做了检查膀胱血块7*7cm，血指标：白细胞：5.21，血红蛋白：151，血肌酐：71，PT：11.3，INR：0.96，请问我父亲这是什么情况？应该怎么处理？"
+    
+    print("🧪 Testing DeepSeek inference (with thinking chain enabled): 测试DeepSeek推理（启用思维链）:")
+    response = loader.chat(
+        user_input,
+        system_prompt=system_prompt,
+        enable_thinking=True,
+        max_new_tokens=4096
+    )
+    print(f"🤖 NanoUro-LLM: {response}")
 ```
 
 -----
@@ -180,21 +177,20 @@ print(response)
 *来自基于此数据集微调的DeepSeek-8B模型的实际输出：*
 
 > **用户（患者）：**
-> "你好，我最近发热腰痛不适，应该怎么办？"
+> "医生您好，我父亲70岁，平时晚上上厕所次数有点多，大概3-4次，白天也比较频繁，平时一直口服多沙唑嗪、非那雄胺，因为3年前装了心脏支架，一直长期口服阿司匹林、波立维，这次因为小便有血已经2天了就去了医院看病，做了检查膀胱血块7*7cm，血指标：白细胞：5.21，血红蛋白：151，血肌酐：71，PT：11.3，INR：0.96，请问我父亲这是什么情况？应该怎么处理？"
 
-> **NanoUro-LLM：**
-> **（思维过程）**
-> *...患者主诉尿频尿急一周...CT显示双侧肾结石，右肾下极结石...输尿管结石...*
-> *分析：症状提示尿路感染合并结石引起的梗阻。*
+> **NanoUro-LLM：**  
+> **（思维过程）** *首先，考虑到您的父亲年龄较大且存在心脏疾病史（冠状动脉旁路手术），这将影响他的整体健康状况。出现小便带血可能提示膀胱或尿道感染，或更严重的问题如肾癌、急性肾盂腔炎或其他泌尿系统疾病。结合膀胱血块大小为7×7 cm，白细胞略升（5.21），血肌酐稍高（71），以及正常的凝血功能（PT: 11.3, INR: 0.96），初步判断可能的原因包括：...综上所述，您父亲的情况需要综合考虑膀胱病变、肾脏功能、心脏病历史和自身代谢状况的多方面因素，通过精准的实验室检验、影像学评估和临床试验来明确病因诊断，进而制定合适的治疗方案...*
 >
 > **（回答）**
-> 根据您的症状和检查结果，您的诊断为**泌尿道炎症**（尿道口酸痛、尿频尿急）合并**双侧输尿管结石**。
+> **临床结论与治疗决策：**
+>鉴于您的父亲70岁且有心脏病史，面临小便带血情况下的临床困境，需综合考虑膀胱感染、肾盂腔炎、肾结石等多种可能性。建议进行必要的影像学和实验室检查以明确病因，并依据具体诊断结果采取相应的治疗措施。同时，需密切关注心肾功能变化，以确保治疗过程中的安全性和有效性。
 >
-> **治疗建议：**
->
-> 1.  **抗感染**：泌尿道炎症需要抗生素治疗。
-> 2.  **手术介入**：泌尿系结石伴有积水/梗阻，建议进行手术治疗（如输尿管镜碎石术）。
-> 3.  **对症治疗**：针对肝小囊肿建议后续随访或微波消融。
+> **最终建议：**
+> 1. **进行尿液培养和膀胱核酸检测**：判断是否有膀胱细菌感染，指导治疗。
+> 2. **进行腹部超声或CT扫描**：评估膀胱和肾盂的形态结构，排除肾盂结石等隐患。
+> 3. **定期监测肾功能和血液指标**：确保治疗不会损害肾脏功能和心脏健康。
+> 4. **根据诊断调整治疗方案**：如果病情稳定，可以在控制心脏病的前提下恢复正常生活方式。
 
 -----
 
